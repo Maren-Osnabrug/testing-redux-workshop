@@ -24,15 +24,30 @@ export const DELETE_TODO_FAIL = `${base}/delete_todo_fail`;
 export const DELETE_TODO_SUCCES = `${base}/delete_todo_success`;
 
 export const initialState = {
+	/* A database-like storage of all todos, keyed by id */
 	todos: {},
+	/* A list of all todo ids */
 	todoIds: [],
+	/* The fetching status of the todos */
 	todosFetching: false,
+	/* The last error (response) received when fetching todos */
 	todosError: undefined,
+	/** A flag to determine the status of the create call */
 	todosCreating: true,
+	/** A flag to determine the status of the update call */
 	todosUpdating: false,
+	/** A flag to determine the status of the delete call */
 	todosDeleting: false,
 };
 
+/**
+ * Define how the state should be modified for all actions.
+ * These changes MUST return a new object instead of mutating the existing state.
+ *
+ * @param  {object} [state=initialState]
+ * @param  {object} [action={}]
+ * @return {object}
+ */
 export default function reducer(state = initialState, action = {}) {
 	switch (action.type) {
 		case ADD_TODOS: {
@@ -53,6 +68,7 @@ export default function reducer(state = initialState, action = {}) {
 				todoIds,
 			};
 		}
+
 		case REMOVE_TODO: {
 			const { todos, todoIds } = state;
 			delete todos[action.payload];
@@ -93,6 +109,7 @@ export default function reducer(state = initialState, action = {}) {
 				todosFetching: false,
 				todosError: undefined,
 			};
+
 		case CREATE_TODO: return { ...state, todosCreating: true, todosError: undefined };
 
 		case CREATE_TODO_FAIL: return { ...state, todosCreating: false, todosError: action.payload };
@@ -116,38 +133,73 @@ export default function reducer(state = initialState, action = {}) {
 	}
 }
 
+/**
+ * Add todos to the state.
+ *
+ * @param {[Object]} todos
+ */
 export const addTodos = todos => ({
 	type: ADD_TODOS,
 	todos,
 });
 
+/**
+ * Add a single todo to the state.
+ *
+ * @param {Object} todo
+ */
 export const addTodo = todo => ({
 	type: ADD_TODOS,
 	todos: [todo],
 });
 
+/**
+ * Remove a todo from the state.
+ *
+ * @param  {string} id
+ */
 export const removeTodo = id => ({
 	type: REMOVE_TODO,
 	payload: id,
 });
 
+/**
+ * Edit a single todo in state.
+ *
+ * @param  {string} id
+ * @param  {string} title
+ */
 export const editTodo = (id, title) => ({
 	type: EDIT_TODO,
-	payload: {
-		id,
-		title,
-	},
+	payload: { id, title },
 });
 
+/**
+ * Mark a single todo as completed in the state.
+ *
+ * @param  {string} id
+ */
 export const completeTodo = id => ({
 	type: COMPLETE_TODO,
 	payload: id,
 });
 
+/**
+ * Select all todos from the state as todo objects.
+ * @param  {Object} state
+ * @return {Array}
+ */
 export const selectTodos = state => (
 	state.todos.todoIds ? state.todos.todoIds.map(todoId => state.todos.todos[todoId]) : []
 );
 
+/**
+ * Select all visible todos from the state as todo objects.
+ * Based on currently active visibilityFilter.
+ *
+ * @param  {Object} state
+ * @return {Array}
+ */
 export const selectVisibleTodos = (state) => {
 	const todos = selectTodos(state);
 	switch (state.visibilityFilter) {
@@ -162,9 +214,20 @@ export const selectVisibleTodos = (state) => {
 	}
 };
 
+/**
+ * Get the count for the completed todos.
+ *
+ * @param  {Object} state
+ * @return {number}
+ */
 export const getCompletedTodoCount = state => selectTodos(state)
 	.reduce((count, todo) => (todo.completed ? count + 1 : count), 0);
 
+/**
+ * Fetch all todos.
+ *
+ * @return {function}
+ */
 export function fetchAllTodos() {
 	return async (dispatch) => {
 		let response;
@@ -181,6 +244,12 @@ export function fetchAllTodos() {
 	};
 }
 
+/**
+ * Create a todo.
+ *
+ * @param  {string} title
+ * @return {function}
+ */
 export function createTodo(title) {
 	return async (dispatch) => {
 		let response;
@@ -197,6 +266,13 @@ export function createTodo(title) {
 	};
 }
 
+/**
+ * Update a todo by id.
+ *
+ * @param  {string} id
+ * @param  {string} title
+ * @return {function}
+ */
 export function updateTodo(id, title) {
 	return async (dispatch) => {
 		let response;
@@ -213,6 +289,12 @@ export function updateTodo(id, title) {
 	};
 }
 
+/**
+ * Mark a todo as complete by id.
+ *
+ * @param  {string} id
+ * @return {function}
+ */
 export function completeTodoById(id) {
 	return async (dispatch) => {
 		let response;
@@ -229,6 +311,11 @@ export function completeTodoById(id) {
 	};
 }
 
+/**
+ * Delete a todo by id.
+ * @param  {string} id
+ * @return {function}
+ */
 export function deleteTodoById(id) {
 	return async (dispatch) => {
 		let response;
